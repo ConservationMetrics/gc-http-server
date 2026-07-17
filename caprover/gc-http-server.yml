@@ -1,0 +1,44 @@
+captainVersion: 4
+
+services:
+  $$cap_appname:
+    image: $$cap_gc_http_server_docker_image
+    restart: unless-stopped
+    volumes:
+      # Mount the whole host datalake once. Changing DIRECTORY does not require
+      # updating Persistent Directories — only the DIRECTORY env var.
+      - $$cap_data_mount:/data_mount
+    environment:
+      DIRECTORY: $$cap_directory
+    caproverExtra:
+      containerHttpPort: "8080"
+
+caproverOneClickApp:
+  instructions:
+    start: |-
+      A minimal static HTTP server. CapRover mounts the host datalake at
+      /data_mount inside the container. Set DIRECTORY to the subdirectory
+      you want to serve under /mnt/persistent-storage/datalake.
+
+      You only need DIRECTORY — do not edit Persistent Directories per site.
+    end: |-
+      GC HTTP Server is deploying and will be available within a minute.
+      It serves $$cap_data_mount/$$cap_directory via /data_mount/$$cap_directory.
+  displayName: Guardian Connector HTTP Server
+  isOfficial: true
+  description: Tiny static file server for HTML/JS/CSS content from the datalake.
+  documentation: https://github.com/ConservationMetrics/gc-http-server
+  variables:
+    - id: "$$cap_gc_http_server_docker_image"
+      label: GC HTTP Server Docker Image
+      defaultValue: "<YOUR_REGISTRY>/gc-http-server:latest"
+      description: Image name and tag for gc-http-server (your own registry or Docker Hub).
+
+    - id: "$$cap_data_mount"
+      label: Host datalake path
+      defaultValue: "/mnt/persistent-storage/datalake"
+      description: Host path mounted at /data_mount in the container. Leave as default unless your datalake lives elsewhere.
+
+    - id: "$$cap_directory"
+      label: Directory
+      description: Required. Subdirectory under the datalake to serve.

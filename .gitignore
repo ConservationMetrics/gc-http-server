@@ -1,0 +1,4 @@
+# Ignore everything inside data_mount except the sample and .gitkeep
+data_mount/*
+!data_mount/.gitkeep
+!data_mount/index.html
