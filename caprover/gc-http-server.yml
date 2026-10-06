@@ -10,6 +10,7 @@ services:
       - $$cap_data_mount:/data_mount
     environment:
       DIRECTORY: $$cap_directory
+      DATA_DIRECTORY: $$cap_data_directory
     caproverExtra:
       containerHttpPort: "8080"
 
@@ -18,12 +19,14 @@ caproverOneClickApp:
     start: |-
       A minimal static HTTP server. CapRover mounts the host datalake at
       /data_mount inside the container. Set DIRECTORY to the subdirectory
-      you want to serve under /mnt/persistent-storage/datalake.
+      you want to serve under /mnt/persistent-storage/datalake. Optionally set
+      DATA_DIRECTORY to expose one additional directory at /data/.
 
-      You only need DIRECTORY — do not edit Persistent Directories per site.
+      Do not edit Persistent Directories per site.
     end: |-
       GC HTTP Server is deploying and will be available within a minute.
       It serves $$cap_data_mount/$$cap_directory via /data_mount/$$cap_directory.
+      If configured, $$cap_data_directory is available at /data/.
   displayName: Guardian Connector HTTP Server
   isOfficial: true
   description: Tiny static file server for HTML/JS/CSS content from the datalake.
@@ -42,3 +45,8 @@ caproverOneClickApp:
     - id: "$$cap_directory"
       label: Directory
       description: Required. Subdirectory under the datalake to serve.
+
+    - id: "$$cap_data_directory"
+      label: Data directory
+      defaultValue: ""
+      description: Optional. Additional datalake subdirectory exposed at /data/.

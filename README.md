@@ -10,13 +10,26 @@ By default, the container mounts the Guardian Connector data lake and serves fil
 
 The service supports the following environment variables:
 
-| Env var | Required | Default | Purpose |
-|---------|----------|---------|---------|
-| `DIRECTORY` | yes | — | Subdirectory under the datalake to serve |
+| Env var          | Required | Default | Purpose                                             |
+| ---------------- | -------- | ------- | --------------------------------------------------- |
+| `DIRECTORY`      | yes      | —       | App subdirectory under the datalake to serve at `/` |
+| `DATA_DIRECTORY` | no       | —       | Additional subdirectory exposed at `/data/`         |
 
-Host layout (CapRover default): `/mnt/persistent-storage/datalake/{DIRECTORY}`  
+Host layout (CapRover default): `/mnt/persistent-storage/datalake/{DIRECTORY}`
 
-This setup makes it possible to point the server at any directory that exists within the data lake.
+When `DATA_DIRECTORY` is configured, the server creates a temporary document
+root containing links to the app files and the selected data directory. The
+source directories are not modified, and no other datalake directories are
+exposed.
+
+For example:
+
+```text
+DIRECTORY=my_app
+DATA_DIRECTORY=comapeo_data
+```
+
+serves the app at `/` and its selected data at `/data/`.
 
 ## Why this fits Guardian Connector
 
@@ -64,7 +77,8 @@ On a fresh CapRover VM the data UID/GID is usually `1000`.
 ```bash
 docker run -p 8080:8080 \
   -e DIRECTORY=demo \
-  -v "$(pwd)/data_mount:/data_mount/demo" \
+  -e DATA_DIRECTORY=demo-data \
+  -v "$(pwd)/data_mount:/data_mount" \
   <YOUR_REGISTRY>/gc-http-server:latest
 ```
 
@@ -74,12 +88,13 @@ Open http://localhost:8080
 
 > [!NOTE]
 >
-> Until this image is available publicly i.e. on Docker Hub, you need to build it yourself and host it on your own registry. 
-> 
+> Until this image is available publicly i.e. on Docker Hub, you need to build it yourself and host it on your own registry.
+>
 > And, you need to add your Docker Registry to CapRover in the **Cluster** tab of the CapRover dashboard UI.
 
 Prefer the one-click app in [`caprover/gc-http-server.yml`](caprover/gc-http-server.yml).
-It mounts the host datalake at `/data_mount` and asks only for `DIRECTORY`.
+It mounts the host datalake at `/data_mount` and asks for `DIRECTORY` plus an
+optional `DATA_DIRECTORY`.
 
 **Manual (Method 6) — one-time Persistent Directories setup:**
 
@@ -91,9 +106,11 @@ It mounts the host datalake at `/data_mount` and asks only for `DIRECTORY`.
    - Path in App: `/data_mount`
    - Path on Host: `/mnt/persistent-storage/datalake`
 
-4. Environment Variables — only this needs to change per site:
+4. Environment Variables:
+
    ```
    DIRECTORY=<your-folder>
+   DATA_DIRECTORY=<optional-data-folder>
    ```
 
 5. Container HTTP Port: `8080`.
@@ -108,3 +125,7 @@ To serve a different folder later, change `DIRECTORY` only — do not edit Persi
 - **`serve path does not exist`:** Path on Host must be the **whole data lake**
   (`/mnt/persistent-storage/datalake`), not a single subdirectory. Then
   `DIRECTORY` selects the folder under it.
+- **`data path does not exist`:** `DATA_DIRECTORY`, when set, must identify a
+  directory beneath the mounted data lake.
+- **`reserved path .../data`:** The app directory cannot contain a top-level
+  `data` entry when `DATA_DIRECTORY` is enabled because `/data/` is reserved.

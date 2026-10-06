@@ -1,8 +1,9 @@
 FROM busybox:1.37.0-musl
 
 # In-container base path (CapRover mounts the host datalake here).
-# Serve root is $DATA_MOUNT/$DIRECTORY.
-ENV DATA_MOUNT=/data_mount
+# DIRECTORY is the app root; optional DATA_DIRECTORY is exposed at /data/.
+ENV DATA_MOUNT=/data_mount \
+    DATA_DIRECTORY=""
 
 # Remap http user to the UID/GID that owns mounted host files (CapRover VMs: usually 1000).
 ARG HTTP_UID=1000
