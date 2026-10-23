@@ -1,0 +1,10 @@
+# Extensions that BusyBox httpd.conf serves and Go does not know by default.
+# Go reads this file when Auth0 mode serves files.
+font/woff				woff
+font/woff2				woff2
+font/ttf				ttf
+font/otf				otf
+application/json			map
+text/markdown				md
+video/webm				webm
+image/x-icon				ico
