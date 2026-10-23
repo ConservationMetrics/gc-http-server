@@ -11,6 +11,12 @@ services:
     environment:
       DIRECTORY: $$cap_directory
       DATA_DIRECTORY: $$cap_data_directory
+      AUTH_ENABLED: $$cap_auth_enabled
+      OAUTH2_PROXY_OIDC_ISSUER_URL: $$cap_auth0_issuer_url
+      OAUTH2_PROXY_CLIENT_ID: $$cap_auth0_client_id
+      OAUTH2_PROXY_CLIENT_SECRET: $$cap_auth0_client_secret
+      OAUTH2_PROXY_REDIRECT_URL: $$cap_oauth2_redirect_url
+      OAUTH2_PROXY_COOKIE_SECRET: $$cap_oauth2_cookie_secret
     caproverExtra:
       containerHttpPort: "8080"
 
@@ -22,11 +28,21 @@ caproverOneClickApp:
       you want to serve under /mnt/persistent-storage/datalake. Optionally set
       DATA_DIRECTORY to expose one additional directory at /data/.
 
+      Leave Enable Auth0 at false to serve files without a login. Set it to
+      true only after creating an Auth0 Regular Web Application whose Allowed
+      Callback URL is https://<this-app-host>/oauth2/callback. Then fill in
+      the issuer, client ID, client secret, and that same callback URL.
+      Login is limited to Auth0 users with the Member or Admin role. The
+      tenant login flow must add those roles to the ID token as urn:gc:roles.
+      Enable Force HTTPS on the app, and do not also enable CapRover HTTP
+      Basic Auth.
+
       Do not edit Persistent Directories per site.
     end: |-
       GC HTTP Server is deploying and will be available within a minute.
       It serves $$cap_data_mount/$$cap_directory via /data_mount/$$cap_directory.
       If configured, $$cap_data_directory is available at /data/.
+      When Auth0 is enabled, every mounted path requires a Member or Admin login.
   displayName: Guardian Connector HTTP Server
   isOfficial: true
   description: Tiny static file server for HTML/JS/CSS content from the datalake.
@@ -50,3 +66,34 @@ caproverOneClickApp:
       label: Data directory
       defaultValue: ""
       description: Optional. Additional datalake subdirectory exposed at /data/.
+
+    - id: "$$cap_auth_enabled"
+      label: Enable Auth0
+      defaultValue: "false"
+      validRegex: /^(true|false)$/
+      description: true requires an Auth0 user with the Member or Admin role before any mounted file is served. false serves the directory without a login.
+
+    - id: "$$cap_auth0_issuer_url"
+      label: Auth0 issuer URL
+      defaultValue: ""
+      description: Required when Auth0 is enabled. Copy the issuer from https://<tenant>/.well-known/openid-configuration, including the trailing slash. Example https://<tenant>.us.auth0.com/
+
+    - id: "$$cap_auth0_client_id"
+      label: Auth0 client ID
+      defaultValue: ""
+      description: Required when Auth0 is enabled. Client ID of the Regular Web Application created for this site.
+
+    - id: "$$cap_auth0_client_secret"
+      label: Auth0 client secret
+      defaultValue: ""
+      description: Required when Auth0 is enabled. Client secret of that same Auth0 application.
+
+    - id: "$$cap_oauth2_redirect_url"
+      label: OAuth redirect URL
+      defaultValue: ""
+      description: Required when Auth0 is enabled. Must be https://<this-app-host>/oauth2/callback and must match an Auth0 Allowed Callback URL exactly.
+
+    - id: "$$cap_oauth2_cookie_secret"
+      label: Session cookie secret
+      defaultValue: "$$cap_gen_random_hex(32)"
+      description: Secret used to sign the login cookie. A random value is generated for a new app. To replace it, use the output of openssl rand -base64 32.
