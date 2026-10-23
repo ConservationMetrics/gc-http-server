@@ -2,7 +2,7 @@
 
 A lightweight HTTP server for serving static content directly from the Guardian Connector data lake (or any mounted volume).
 
-By default, this service runs a minimal BusyBox `httpd` web server and exposes files stored within the Guardian Connector data lake over HTTP. It is particularly useful for hosting custom HTML, JavaScript, CSS, images, or other static assets that interact with data already managed by Guardian Connector.
+This service runs a minimal BusyBox `httpd` web server and exposes files stored within the Guardian Connector data lake over HTTP. It is particularly useful for hosting custom HTML, JavaScript, CSS, images, or other static assets that interact with data already managed by Guardian Connector.
 
 ## How it works
 
@@ -10,10 +10,10 @@ By default, the container mounts the Guardian Connector data lake and serves fil
 
 The service supports the following environment variables:
 
-| Env var          | Required | Default | Purpose                                              |
-| ---------------- | -------- | ------- | ---------------------------------------------------- |
-| `DIRECTORY`      | yes      | —       | App subdirectory under the datalake to serve at `/` |
-| `DATA_DIRECTORY` | no       | —       | Additional subdirectory exposed at `/data/`         |
+| Env var          | Required | Default | Purpose                                                  |
+| ---------------- | -------- | ------- | -------------------------------------------------------- |
+| `DIRECTORY`      | yes      | —       | App subdirectory under the datalake to serve at `/`      |
+| `DATA_DIRECTORY` | no       | —       | Additional subdirectory exposed at `/data/`              |
 | `AUTH_ENABLED`   | no       | `false` | `true` requires an Auth0 login before any file is served |
 
 Host layout (CapRover default): `/mnt/persistent-storage/datalake/{DIRECTORY}`
@@ -69,23 +69,23 @@ An anonymous browser request is redirected to Auth0. It does not receive the fil
 
 Create one Auth0 **Regular Web Application** for each public site:
 
-| Auth0 setting | Value |
-| --- | --- |
-| Allowed Callback URLs | `https://<host>/oauth2/callback` |
-| Allowed Logout URLs | `https://<host>/` |
-| Allowed Web Origins | `https://<host>` |
-| Connections | The tenant's existing database and Google connections |
+| Auth0 setting         | Value                                                 |
+| --------------------- | ----------------------------------------------------- |
+| Allowed Callback URLs | `https://<host>/oauth2/callback`                      |
+| Allowed Logout URLs   | `https://<host>/`                                     |
+| Allowed Web Origins   | `https://<host>`                                      |
+| Connections           | The tenant's existing database and Google connections |
 
 No Auth0 Management API scopes are required. Roles are read from the ID token claim `urn:gc:roles`.
 
-| Env var | Required when Auth0 is enabled | Purpose |
-| --- | --- | --- |
-| `OAUTH2_PROXY_OIDC_ISSUER_URL` | yes | Issuer from the tenant's `/.well-known/openid-configuration`, including its trailing slash. Example: `https://<tenant>.us.auth0.com/` |
-| `OAUTH2_PROXY_CLIENT_ID` | yes | Auth0 application client ID |
-| `OAUTH2_PROXY_CLIENT_SECRET` | yes | Auth0 application client secret |
-| `OAUTH2_PROXY_REDIRECT_URL` | yes | `https://<host>/oauth2/callback` |
-| `OAUTH2_PROXY_COOKIE_SECRET` | yes | 32-byte secret used to sign the session cookie |
-| `OAUTH2_PROXY_COOKIE_SECURE` | no | Defaults to `true`. Set `false` only for local `http://` testing |
+| Env var                        | Required when Auth0 is enabled | Purpose                                                                                                                               |
+| ------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `OAUTH2_PROXY_OIDC_ISSUER_URL` | yes                            | Issuer from the tenant's `/.well-known/openid-configuration`, including its trailing slash. Example: `https://<tenant>.us.auth0.com/` |
+| `OAUTH2_PROXY_CLIENT_ID`       | yes                            | Auth0 application client ID                                                                                                           |
+| `OAUTH2_PROXY_CLIENT_SECRET`   | yes                            | Auth0 application client secret                                                                                                       |
+| `OAUTH2_PROXY_REDIRECT_URL`    | yes                            | `https://<host>/oauth2/callback`                                                                                                      |
+| `OAUTH2_PROXY_COOKIE_SECRET`   | yes                            | 32-byte secret used to sign the session cookie                                                                                        |
+| `OAUTH2_PROXY_COOKIE_SECURE`   | no                             | Defaults to `true`. Set `false` only for local `http://` testing                                                                      |
 
 Generate a cookie secret with:
 
@@ -177,7 +177,6 @@ To serve a different folder later, change `DIRECTORY` only — do not edit Persi
   directory beneath the mounted data lake.
 - **`reserved path .../data`:** The app directory cannot contain a top-level
   `data` entry when `DATA_DIRECTORY` is enabled because `/data/` is reserved.
-- **`AUTH_ENABLED must be true or false`:** use exactly `true` or `false`.
 - **`AUTH_ENABLED=true requires`:** the Auth0 client, issuer, redirect URL, and cookie secret must all be set.
 - **Redirect or cookie-secure errors:** a public CapRover site uses an `https://<host>/oauth2/callback` redirect and the default secure cookie. `OAUTH2_PROXY_COOKIE_SECURE=false` is only valid with an `http://` redirect for local testing.
 - **Login succeeds but the next request is anonymous:** the callback URL, Auth0 Allowed Callback URL, and public host disagree, or the app is not using HTTPS while the cookie is marked secure.
