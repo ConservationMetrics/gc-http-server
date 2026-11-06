@@ -194,6 +194,7 @@ exec env -i \
   --cookie-httponly=true \
   --cookie-samesite=lax \
   --cookie-name="$cookie_name" \
+  --cookie-expire=24h \
   --session-cookie-minimal=true \
   --skip-provider-button=true \
   --reverse-proxy=true \
